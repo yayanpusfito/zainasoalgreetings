@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Greetings Anak SD</title>
+
+<style>
+body {
+    font-family: 'Comic Sans MS', cursive;
+    background: linear-gradient(to bottom, #ffecd2, #fcb69f);
+    margin: 0;
+    padding: 15px;
+    text-align: center;
+}
+
+h1 {
+    color: #ff5722;
+    font-size: 28px;
+    margin-bottom: 5px;
+}
+
+.quiz-box {
+    background: white;
+    max-width: 420px;
+    margin: auto;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* FOTO ATAS TENGAH */
+.top-image {
+    width: 180px;
+    max-width: 80%;
+    margin: 0 auto 10px auto;
+    display: block;
+}
+
+/* TIMER */
+.timer {
+    font-size: 18px;
+    color: #e91e63;
+    margin-bottom: 8px;
+}
+
+/* EMOJI KARTUN */
+.cartoon {
+    font-size: 60px;
+    margin-bottom: 8px;
+}
+
+/* SOAL */
+.question {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+/* TOMBOL */
+button {
+    width: 100%;
+    padding: 14px;
+    margin: 8px 0;
+    font-size: 17px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #e0e0e0;
+}
+
+button:hover {
+    background: #ffe082;
+}
+
+.correct {
+    background: #4caf50 !important;
+    color: white;
+}
+
+.wrong {
+    background: #f44336 !important;
+    color: white;
+}
+
+@media (max-width: 480px) {
+    h1 { font-size: 24px; }
+    .question { font-size: 18px; }
+}
+</style>
+</head>
+
+<body>
+
+<h1>👋 Quiz Greetings 👋</h1>
+<p>Bahasa Inggris Anak SD</p>
+
+<div class="quiz-box">
+
+    <!-- FOTO ATAS TENGAH -->
+    <img src="zaina.png" class="top-image" alt="Greetings Cartoon">
+
+    <div class="timer">⏱ Waktu: <span id="time">10</span> detik</div>
+    <div class="cartoon" id="cartoon">😊</div>
+    <div class="question" id="question"></div>
+    <div id="answers"></div>
+
+</div>
+
+<script>
+// ================= DATA QUIZ (20 SOAL) =================
+const quiz = [
+ {q:"Apa arti 'Good Morning'?", img:"🌞", a:["Selamat pagi","Selamat malam","Terima kasih"], c:0},
+ {q:"Sapaan untuk bertemu teman?", img:"👋", a:["Goodbye","Hello","Good night"], c:1},
+ {q:"Apa arti 'Goodbye'?", img:"🚶‍♂️", a:["Halo","Selamat tinggal","Selamat pagi"], c:1},
+ {q:"Ucapan sebelum tidur?", img:"🌙", a:["Good night","Hello","Good morning"], c:0},
+ {q:"Apa arti 'Hello'?", img:"😊", a:["Halo","Maaf","Terima kasih"], c:0},
+ {q:"Good Afternoon digunakan saat?", img:"☀️", a:["Pagi","Siang","Malam"], c:1},
+ {q:"Sapaan sopan ke guru?", img:"🎓", a:["Hey!","Hello Miss","Bye"], c:1},
+ {q:"Good Evening artinya?", img:"🌆", a:["Selamat sore","Selamat pagi","Selamat malam"], c:0},
+ {q:"Good Morning diucapkan saat?", img:"⏰", a:["Pagi hari","Siang hari","Malam hari"], c:0},
+ {q:"Ucapan saat berpisah?", img:"👋", a:["Hello","Goodbye","Good morning"], c:1},
+ {q:"Sapaan pagi hari?", img:"🌅", a:["Good morning","Good night","Goodbye"], c:0},
+ {q:"Apa arti 'Good Night'?", img:"😴", a:["Selamat malam","Selamat pagi","Selamat siang"], c:0},
+ {q:"Good Evening digunakan saat?", img:"🌇", a:["Sore hari","Pagi hari","Siang hari"], c:0},
+ {q:"Sapaan paling sederhana?", img:"🙂", a:["Hello","Bye","Thanks"], c:0},
+ {q:"Ucapan pulang sekolah?", img:"🏫", a:["Goodbye","Hello","Good morning"], c:0},
+ {q:"Arti 'Good Afternoon'?", img:"🍽️", a:["Selamat siang","Selamat pagi","Selamat malam"], c:0},
+ {q:"Sapaan untuk teman sebaya?", img:"🧒", a:["Hello","Sir","Miss"], c:0},
+ {q:"Ucapan malam hari?", img:"🌌", a:["Good night","Good morning","Good afternoon"], c:0},
+ {q:"Kata yang artinya halo?", img:"👋", a:["Hello","Goodbye","Good night"], c:0},
+ {q:"Ucapan sebelum tidur?", img:"🛏️", a:["Good night","Hello","Good morning"], c:0}
+];
+
+// ================= LOGIC QUIZ =================
+let index = 0;
+let score = 0;
+let timeLeft = 10;
+let timer;
+
+// SOUND
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type){
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = type === "correct" ? 600 : 200;
+    gain.gain.value = 0.2;
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+}
+
+// LOAD SOAL
+function loadQuestion(){
+    clearInterval(timer);
+    timeLeft = 10;
+    document.getElementById("time").textContent = timeLeft;
+
+    document.getElementById("question").textContent = quiz[index].q;
+    document.getElementById("cartoon").textContent = quiz[index].img;
+
+    const answers = document.getElementById("answers");
+    answers.innerHTML = "";
+
+    quiz[index].a.forEach((text,i)=>{
+        const btn = document.createElement("button");
+        btn.textContent = text;
+        btn.onclick = ()=>checkAnswer(btn,i);
+        answers.appendChild(btn);
+    });
+
+    timer = setInterval(()=>{
+        timeLeft--;
+        document.getElementById("time").textContent = timeLeft;
+        if(timeLeft === 0){
+            clearInterval(timer);
+            nextQuestion();
+        }
+    },1000);
+}
+
+// CEK JAWABAN
+function checkAnswer(button,i){
+    clearInterval(timer);
+    const buttons = document.querySelectorAll("button");
+    buttons.forEach(b=>b.disabled=true);
+
+    if(i === quiz[index].c){
+        button.classList.add("correct");
+        playSound("correct");
+        score++;
+    } else {
+        button.classList.add("wrong");
+        buttons[quiz[index].c].classList.add("correct");
+        playSound("wrong");
+    }
+
+    setTimeout(nextQuestion,1200);
+}
+
+// LANJUT
+function nextQuestion(){
+    index++;
+    if(index < quiz.length){
+        loadQuestion();
+    } else {
+        document.querySelector(".quiz-box").innerHTML = `
+            <h2>🎉 Quiz Selesai 🎉</h2>
+            <p>Skor kamu:</p>
+            <h1>${score} / ${quiz.length}</h1>
+            <p>${score >= 14 ? "Hebat sekali ⭐⭐⭐" : "Ayo belajar lagi 💪"}</p>
+        `;
+    }
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
